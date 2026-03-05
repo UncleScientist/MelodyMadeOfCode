@@ -1,4 +1,4 @@
-use std::{convert::Infallible, str::FromStr};
+use std::{collections::HashMap, convert::Infallible, str::FromStr};
 
 fn main() {
     let data = std::fs::read_to_string("input/everybody_codes_e3_q01_p1.txt").expect("file");
@@ -22,6 +22,26 @@ fn main() {
         .min_by(|a, b| a.0.cmp(&b.0))
         .unwrap();
     println!("part 2 = {}", darkest.1.id);
+
+    let data = std::fs::read_to_string("input/everybody_codes_e3_q01_p3.txt").expect("file");
+    let scales: Vec<Scale> = data.lines().map(|line| line.parse().unwrap()).collect();
+
+    let mut grouping = HashMap::<Classification, (usize, usize)>::new();
+    for (scale_id, classification) in scales
+        .iter()
+        .map(|scale| (scale.id, scale.classify()))
+        .filter(|(_, classification)| {
+            classification.color != Color::Grey && classification.sheen != Sheen::Satin
+        })
+    {
+        let entry = grouping.entry(classification).or_insert((0, 0));
+        entry.0 += scale_id;
+        entry.1 += 1;
+    }
+    println!(
+        "part 3 = {}",
+        grouping.values().max_by(|a, b| a.1.cmp(&b.1)).unwrap().0
+    );
 }
 
 #[derive(Default, Debug)]
@@ -31,6 +51,28 @@ struct Scale {
     green: u8,
     blue: u8,
     shine: u8,
+}
+
+impl Scale {
+    fn classify(&self) -> Classification {
+        let color = if self.red < self.blue && self.green < self.blue {
+            Color::Blue
+        } else if self.red < self.green && self.blue < self.green {
+            Color::Green
+        } else if self.green < self.red && self.blue < self.red {
+            Color::Red
+        } else {
+            Color::Grey
+        };
+
+        let sheen = match self.shine {
+            0..=30 => Sheen::Matte,
+            31 | 32 => Sheen::Satin,
+            33.. => Sheen::Shiny,
+        };
+
+        Classification { color, sheen }
+    }
 }
 
 impl FromStr for Scale {
@@ -73,6 +115,27 @@ fn to_binary_impl<S: AsRef<str>>(s: S) -> u8 {
     result
 }
 
+#[derive(Debug, Hash, PartialEq, Eq)]
+enum Color {
+    Red,
+    Green,
+    Blue,
+    Grey,
+}
+
+#[derive(Debug, Hash, PartialEq, Eq)]
+enum Sheen {
+    Shiny,
+    Matte,
+    Satin,
+}
+
+#[derive(Debug, Hash, PartialEq, Eq)]
+struct Classification {
+    color: Color,
+    sheen: Sheen,
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -106,5 +169,29 @@ mod test {
         assert_eq!(scale.green, 11);
         assert_eq!(scale.blue, 3);
         assert_eq!(scale.shine, 21);
+    }
+
+    #[test]
+    fn test_satin_classification() {
+        let scale: Scale = "15437:rRrrRR gGGGGG BBBBBB sSSSSS".parse().unwrap();
+        assert_eq!(
+            Classification {
+                color: Color::Blue,
+                sheen: Sheen::Satin
+            },
+            scale.classify()
+        );
+    }
+
+    #[test]
+    fn test_red_matte_classification() {
+        let scale: Scale = "94682:RrRrrR gGGggG bBBBBB ssSSSs".parse().unwrap();
+        assert_eq!(
+            Classification {
+                color: Color::Red,
+                sheen: Sheen::Matte
+            },
+            scale.classify()
+        );
     }
 }
