@@ -11,6 +11,17 @@ fn main() {
             .map(|scale| scale.id)
             .sum::<usize>()
     );
+
+    let data = std::fs::read_to_string("input/everybody_codes_e3_q01_p2.txt").expect("file");
+    let scales: Vec<Scale> = data.lines().map(|line| line.parse().unwrap()).collect();
+    let max_shine = scales.iter().map(|scale| scale.shine).max().unwrap();
+    let darkest = scales
+        .iter()
+        .filter(|scale| scale.shine == max_shine)
+        .map(|scale| (scale.red + scale.green + scale.blue, scale))
+        .min_by(|a, b| a.0.cmp(&b.0))
+        .unwrap();
+    println!("part 2 = {}", darkest.1.id);
 }
 
 #[derive(Default, Debug)]
@@ -19,6 +30,7 @@ struct Scale {
     red: u8,
     green: u8,
     blue: u8,
+    shine: u8,
 }
 
 impl FromStr for Scale {
@@ -32,6 +44,7 @@ impl FromStr for Scale {
             red: rgb[0].to_binary(),
             green: rgb[1].to_binary(),
             blue: rgb[2].to_binary(),
+            shine: if rgb.len() > 3 { rgb[3].to_binary() } else { 0 },
         })
     }
 }
@@ -83,5 +96,15 @@ mod test {
         assert_eq!(scale.red, 0);
         assert_eq!(scale.green, 11);
         assert_eq!(scale.blue, 3);
+    }
+
+    #[test]
+    fn test_shiny_scale() {
+        let scale: Scale = "2456:rrrrrr ggGgGG bbbbBB sSsSsS".parse().unwrap();
+        assert_eq!(scale.id, 2456);
+        assert_eq!(scale.red, 0);
+        assert_eq!(scale.green, 11);
+        assert_eq!(scale.blue, 3);
+        assert_eq!(scale.shine, 21);
     }
 }
