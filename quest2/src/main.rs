@@ -12,7 +12,7 @@ fn main() {
     println!("part 2 = {}", crate::part2::run(&bone[0]));
 
     let bones = load_file("input/everybody_codes_e3_q02_p3.txt");
-    println!("part 3 = {}", crate::part3::run(&bones));
+    println!("part 3 = {}", crate::part3::run(bones));
 }
 
 fn load_file<P: AsRef<Path>>(path: P) -> Vec<(i32, i32)> {

@@ -3,9 +3,8 @@ use std::{collections::HashSet, fmt::Display};
 pub fn run(bones: Vec<(i32, i32)>) -> usize {
     let mut solver = Solver::new(bones);
 
-    while !solver.finished() && solver.steps < 1600 {
+    while !solver.finished() && solver.steps < 16000 {
         solver.step();
-        println!("{solver}");
     }
 
     solver.steps
@@ -40,23 +39,16 @@ impl Solver {
 
     fn new(bones: Vec<(i32, i32)>) -> Self {
         let structure: HashSet<(i32, i32)> = bones.into_iter().collect();
-        let mut remaining = HashSet::new();
-        let mut bounding_box = (0, 0, 0, 0);
+        let bounding_box = structure.iter().fold((0, 0, 0, 0), |bb, pt| {
+            (
+                bb.0.min(pt.0 - 1),
+                bb.1.max(pt.0 + 1),
+                bb.2.min(pt.1 - 1),
+                bb.3.max(pt.1 + 1),
+            )
+        });
 
-        for point in &structure {
-            for delta in &Self::DIRS {
-                let pt = (point.0 + delta.0, point.1 + delta.1);
-                if !structure.contains(&pt) {
-                    remaining.insert(pt);
-                    bounding_box = (
-                        bounding_box.0.min(pt.0),
-                        bounding_box.1.max(pt.0),
-                        bounding_box.2.min(pt.1),
-                        bounding_box.3.max(pt.1),
-                    );
-                }
-            }
-        }
+        let remaining = Self::find_enclosure(&structure, &bounding_box);
 
         Self {
             curloc: (0, 0),
@@ -109,9 +101,7 @@ impl Solver {
 
     fn flood_fill_from(&mut self, next_loc: &(i32, i32)) {
         for candidate in self.find_candidates(next_loc) {
-            println!("Flood fill attempt from: {candidate:?}");
             if let Some(visited) = self.try_flood(candidate) {
-                println!("> Flooded {visited:?}");
                 self.visited.extend(&visited);
                 self.remaining.retain(|p| !visited.contains(p));
             }
@@ -122,7 +112,7 @@ impl Solver {
         Self::DIRS
             .iter()
             .map(|dir| (loc.0 + dir.0, loc.1 + dir.1))
-            .filter(|pt| !self.visited.contains(&pt) && !self.structure.contains(&pt))
+            .filter(|pt| !self.visited.contains(pt) && !self.structure.contains(pt))
             .collect()
     }
 
@@ -132,7 +122,6 @@ impl Solver {
 
         while let Some(pos) = queue.pop() {
             if visited.insert(pos) {
-                println!(" > {pos:?}");
                 for delta in &Self::DIRS {
                     let pt = (pos.0 + delta.0, pos.1 + delta.1);
                     if pt.0 < self.bounding_box.0
@@ -153,6 +142,42 @@ impl Solver {
         }
 
         Some(visited)
+    }
+
+    fn find_enclosure(
+        structure: &HashSet<(i32, i32)>,
+        bounding_box: &(i32, i32, i32, i32),
+    ) -> HashSet<(i32, i32)> {
+        let mut enclosure = HashSet::new();
+
+        let mut queue = vec![(bounding_box.0, bounding_box.2)];
+        let mut visited = HashSet::new();
+        while let Some(pos) = queue.pop() {
+            if visited.insert(pos) {
+                for delta in &Self::DIRS {
+                    let pt = (delta.0 + pos.0, delta.1 + pos.1);
+                    if pt.0 < bounding_box.0
+                        || pt.0 > bounding_box.1
+                        || pt.1 < bounding_box.2
+                        || pt.1 > bounding_box.3
+                    {
+                        continue;
+                    }
+                    if structure.contains(&pt) {
+                        enclosure.insert(pos);
+                        continue;
+                    }
+                    if !visited.contains(&pt) {
+                        queue.push(pt);
+                    }
+                }
+            }
+        }
+
+        // Remove the starting location in case we hit that already
+        enclosure.remove(&(0, 0));
+
+        enclosure
     }
 }
 
