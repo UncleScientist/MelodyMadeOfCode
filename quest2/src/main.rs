@@ -2,20 +2,25 @@ use std::{collections::HashMap, path::Path};
 
 mod part1;
 mod part2;
+mod part3;
 
 fn main() {
     let bone = load_file("input/everybody_codes_e3_q02_p1.txt");
-    println!("part 1 = {}", crate::part1::run(&bone));
+    println!("part 1 = {}", crate::part1::run(&bone[0]));
 
     let bone = load_file("input/everybody_codes_e3_q02_p2.txt");
-    // let bone = load_file("input/test-part-2.txt");
-    println!("part 2 = {}", crate::part2::run(&bone));
+    println!("part 2 = {}", crate::part2::run(&bone[0]));
+
+    let bones = load_file("input/everybody_codes_e3_q02_p3.txt");
+    println!("part 3 = {}", crate::part3::run(&bones));
 }
 
-fn load_file<P: AsRef<Path>>(path: P) -> (i32, i32) {
+fn load_file<P: AsRef<Path>>(path: P) -> Vec<(i32, i32)> {
     let data = std::fs::read_to_string(path).expect("file");
 
-    let points: HashMap<_, _> = data
+    let mut points = HashMap::<char, Vec<(i32, i32)>>::new();
+
+    for (ch, point) in data
         .lines()
         .enumerate()
         .flat_map(|(r, line)| {
@@ -24,9 +29,16 @@ fn load_file<P: AsRef<Path>>(path: P) -> (i32, i32) {
                 .map(move |(c, ch)| (ch, (r as i32, c as i32)))
         })
         .filter(|(ch, _)| *ch == '@' || *ch == '#')
-        .collect();
-    let start = points.get(&'@').unwrap_or(&(0, 0));
-    let bone = points.get(&'#').unwrap_or(&(0, 0));
+    {
+        let entry = points.entry(ch).or_default();
+        entry.push(point);
+    }
 
-    (bone.0 - start.0, bone.1 - start.1)
+    let start = points.get(&'@').expect("missing starting location")[0];
+    points
+        .get(&'#')
+        .expect("missing vocal bones location")
+        .iter()
+        .map(|bone| (bone.0 - start.0, bone.1 - start.1))
+        .collect()
 }
