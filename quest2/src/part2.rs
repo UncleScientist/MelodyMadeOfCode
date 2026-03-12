@@ -1,23 +1,48 @@
 use std::{collections::HashSet, fmt::Display};
 
-pub fn run(bone: &(i32, i32)) -> usize {
-    let mut wave = Wave::new(bone);
-    let mut loc = (0i32, 0i32);
-    let mut steps: usize = 0;
-
-    while !wave.surrounds_bone() {
-        steps += 1;
-        loc = loop {
-            let next_loc = wave.next(&loc);
-            if wave.visit(next_loc) {
-                break next_loc;
-            }
-        };
-
-        wave.check_for_gap(&loc);
+pub fn run(bone: (i32, i32)) -> usize {
+    let mut solver = Part2Solver::new(bone);
+    for () in solver.by_ref() {
+        // do nothing
     }
+    solver.steps
+}
 
-    steps
+#[derive(Default)]
+pub struct Part2Solver {
+    wave: Wave,
+    cur_loc: (i32, i32),
+    steps: usize,
+}
+
+impl Part2Solver {
+    pub fn new(bone: (i32, i32)) -> Self {
+        Self {
+            wave: Wave::new(bone),
+            ..Self::default()
+        }
+    }
+}
+
+impl Iterator for Part2Solver {
+    type Item = ();
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if !self.wave.surrounds_bone() {
+            self.steps += 1;
+            self.cur_loc = loop {
+                let next_loc = self.wave.next(&self.cur_loc);
+                if self.wave.visit(next_loc) {
+                    break next_loc;
+                }
+            };
+
+            self.wave.check_for_gap(&self.cur_loc);
+            Some(())
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Default)]
@@ -57,10 +82,10 @@ impl Display for Wave {
 impl Wave {
     const DIRS: [(i32, i32); 4] = [(-1, 0), (0, 1), (1, 0), (0, -1)];
 
-    fn new(bone: &(i32, i32)) -> Self {
+    fn new(bone: (i32, i32)) -> Self {
         Wave {
             visited: HashSet::from([(0, 0)]),
-            bone: *bone,
+            bone,
             top: 0.min(bone.0),
             bot: 0.max(bone.0),
             left: 0.min(bone.1),
