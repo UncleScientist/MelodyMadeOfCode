@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use quest2::{DrawState, part1::Part1Solver, part2::Part2Solver};
+use quest2::{DrawState, part1::Part1Solver, part2::Part2Solver, part3::Part3Solver};
 
 #[macroquad::main("Quest 2")]
 async fn main() -> Result<(), macroquad::Error> {
@@ -9,39 +9,55 @@ async fn main() -> Result<(), macroquad::Error> {
     let part2bone = quest2::load_file("input/everybody_codes_e3_q02_p2.txt");
     let mut solver2 = Part2Solver::new(part2bone[0]);
 
+    let part3bone = quest2::load_file("input/everybody_codes_e3_q02_p3.txt");
+    // let part3bone = quest2::load_file("input/test-part-3-2.txt");
+    let mut solver3 = Part3Solver::new(part3bone);
+
     let mut screen = Screen::default();
     let mut current_state = State::Solver1;
     loop {
         match current_state {
             State::Solver1 => {
-                screen.draw(solver1.state(), part1bone[0]);
+                screen.draw(solver1.state());
                 if solver1.next().is_none() || is_mouse_button_pressed(MouseButton::Left) {
                     current_state = State::Waiting1;
                 }
             }
             State::Waiting1 => {
-                screen.draw(solver1.state(), part1bone[0]);
+                screen.draw(solver1.state());
                 if is_mouse_button_pressed(MouseButton::Left) {
                     current_state = State::Solver2;
                 }
             }
             State::Solver2 => {
-                screen.draw(solver2.state(), part2bone[0]);
+                screen.draw(solver2.state());
                 if solver2.next().is_none() || is_mouse_button_pressed(MouseButton::Left) {
                     current_state = State::Waiting2;
                 }
             }
             State::Waiting2 => {
-                screen.draw(solver2.state(), part2bone[0]);
+                screen.draw(solver2.state());
                 if is_mouse_button_pressed(MouseButton::Left) {
-                    current_state = State::_Solver3;
+                    current_state = State::Solver3;
                 }
             }
-            State::_Solver3 => todo!(),
-            State::_Waiting3 => todo!(),
+            State::Solver3 => {
+                screen.draw(solver3.state());
+                if solver3.next().is_none() || is_mouse_button_pressed(MouseButton::Left) {
+                    current_state = State::Waiting3;
+                }
+            }
+            State::Waiting3 => {
+                screen.draw(solver3.state());
+                if is_mouse_button_pressed(MouseButton::Left) {
+                    break;
+                }
+            }
         }
         next_frame().await
     }
+
+    Ok(())
 }
 
 enum State {
@@ -49,8 +65,8 @@ enum State {
     Waiting1,
     Solver2,
     Waiting2,
-    _Solver3,
-    _Waiting3,
+    Solver3,
+    Waiting3,
 }
 
 #[derive(Default)]
@@ -61,7 +77,7 @@ struct Screen {
 }
 
 impl Screen {
-    fn draw(&mut self, state: DrawState<'_>, bone: (i32, i32)) {
+    fn draw(&mut self, state: DrawState<'_>) {
         self.width = screen_width() / 100.0;
         self.height = screen_height() / 100.0;
 
@@ -70,7 +86,9 @@ impl Screen {
         for &(y, x) in state.visited {
             self.rect(x as f32, y as f32, GREEN);
         }
-        self.rect(bone.1 as f32, bone.0 as f32, RED);
+        for bone in &state.bone {
+            self.rect(bone.1 as f32, bone.0 as f32, RED);
+        }
         self.rect(state.cur_loc.1 as f32, state.cur_loc.0 as f32, BLUE);
 
         draw_text(&format!("Steps: {} ", state.steps), 10., 20., 24., WHITE);

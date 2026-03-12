@@ -1,7 +1,9 @@
 use std::{collections::HashSet, fmt::Display};
 
+use crate::DrawState;
+
 pub fn run(bones: Vec<(i32, i32)>) -> usize {
-    let mut solver = Solver::new(bones);
+    let mut solver = Part3Solver::new(bones);
 
     while solver.next().is_some() && solver.steps < 16000 {
         // do nothing
@@ -10,7 +12,7 @@ pub fn run(bones: Vec<(i32, i32)>) -> usize {
     solver.steps
 }
 
-struct Solver {
+pub struct Part3Solver {
     curloc: (i32, i32),
     steps: usize,
     visited: HashSet<(i32, i32)>,
@@ -20,7 +22,7 @@ struct Solver {
     bounding_box: (i32, i32, i32, i32), // top, bottom, left, right
 }
 
-impl Iterator for Solver {
+impl Iterator for Part3Solver {
     type Item = ();
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -33,7 +35,7 @@ impl Iterator for Solver {
     }
 }
 
-impl Solver {
+impl Part3Solver {
     const DIRS: [(i32, i32); 4] = [(-1, 0), (0, 1), (1, 0), (0, -1)];
     const DIR3STEP: [(i32, i32); 12] = [
         (-1, 0),
@@ -50,7 +52,7 @@ impl Solver {
         (0, -1),
     ];
 
-    fn new(bones: Vec<(i32, i32)>) -> Self {
+    pub fn new(bones: Vec<(i32, i32)>) -> Self {
         let structure: HashSet<(i32, i32)> = bones.into_iter().collect();
         let bounding_box = structure.iter().fold((0, 0, 0, 0), |bb, pt| {
             (
@@ -71,6 +73,16 @@ impl Solver {
             structure,
             curdir: 0,
             bounding_box,
+        }
+    }
+
+    pub fn state(&self) -> DrawState<'_> {
+        DrawState {
+            bounding_box: self.bounding_box,
+            visited: self.visited.iter(),
+            cur_loc: self.curloc,
+            bone: self.structure.iter().copied().collect(),
+            steps: self.steps,
         }
     }
 
@@ -194,7 +206,7 @@ impl Solver {
     }
 }
 
-impl Display for Solver {
+impl Display for Part3Solver {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "-- Step {} --", self.steps)?;
         for row in self.bounding_box.0..=self.bounding_box.1 {
