@@ -1,5 +1,7 @@
 use std::{collections::HashSet, fmt::Display};
 
+use crate::DrawState;
+
 pub fn run(bone: (i32, i32)) -> usize {
     let mut solver = Part2Solver::new(bone);
     for () in solver.by_ref() {
@@ -20,6 +22,21 @@ impl Part2Solver {
         Self {
             wave: Wave::new(bone),
             ..Self::default()
+        }
+    }
+
+    pub fn state(&self) -> DrawState<'_> {
+        DrawState {
+            bounding_box: (
+                self.wave.top,
+                self.wave.left,
+                self.wave.bot,
+                self.wave.right,
+            ),
+            visited: self.wave.visited.iter(),
+            cur_loc: self.cur_loc,
+            bone: vec![self.wave.bone],
+            steps: self.steps,
         }
     }
 }

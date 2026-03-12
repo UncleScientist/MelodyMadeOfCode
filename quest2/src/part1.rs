@@ -1,4 +1,6 @@
-use std::collections::{HashSet, hash_set::Iter};
+use std::collections::HashSet;
+
+use crate::DrawState;
 
 #[derive(Default)]
 pub struct Part1Solver {
@@ -21,8 +23,14 @@ impl Part1Solver {
         }
     }
 
-    pub fn state(&self) -> (Iter<'_, (i32, i32)>, (i32, i32)) {
-        (self.visited.iter(), self.cur_loc)
+    pub fn state(&self) -> DrawState<'_> {
+        DrawState {
+            bounding_box: (-50, -50, 50, 50),
+            visited: self.visited.iter(),
+            cur_loc: self.cur_loc,
+            bone: vec![self.bone],
+            steps: self.steps,
+        }
     }
 }
 

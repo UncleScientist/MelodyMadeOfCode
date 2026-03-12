@@ -1,4 +1,7 @@
-use std::{collections::HashMap, path::Path};
+use std::{
+    collections::{HashMap, hash_set::Iter},
+    path::Path,
+};
 
 pub mod part1;
 pub mod part2;
@@ -30,4 +33,12 @@ pub fn load_file<P: AsRef<Path>>(path: P) -> Vec<(i32, i32)> {
         .iter()
         .map(|bone| (bone.0 - start.0, bone.1 - start.1))
         .collect()
+}
+
+pub struct DrawState<'a> {
+    pub bounding_box: (i32, i32, i32, i32),
+    pub visited: Iter<'a, (i32, i32)>,
+    pub cur_loc: (i32, i32),
+    pub bone: Vec<(i32, i32)>,
+    pub steps: usize,
 }
