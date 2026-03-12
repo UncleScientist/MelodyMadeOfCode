@@ -1,18 +1,14 @@
 use std::{collections::HashMap, path::Path};
 
-mod part1;
-mod part2;
-mod part3;
-
 fn main() {
     let bone = load_file("input/everybody_codes_e3_q02_p1.txt");
-    println!("part 1 = {}", crate::part1::run(&bone[0]));
+    println!("part 1 = {}", quest2::part1::run(bone[0]));
 
     let bone = load_file("input/everybody_codes_e3_q02_p2.txt");
-    println!("part 2 = {}", crate::part2::run(&bone[0]));
+    println!("part 2 = {}", quest2::part2::run(&bone[0]));
 
     let bones = load_file("input/everybody_codes_e3_q02_p3.txt");
-    println!("part 3 = {}", crate::part3::run(bones));
+    println!("part 3 = {}", quest2::part3::run(bones));
 }
 
 fn load_file<P: AsRef<Path>>(path: P) -> Vec<(i32, i32)> {
