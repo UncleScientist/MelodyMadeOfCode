@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, hash_set::Iter};
 
 #[derive(Default)]
 pub struct Part1Solver {
@@ -19,6 +19,10 @@ impl Part1Solver {
             bone,
             ..Self::default()
         }
+    }
+
+    pub fn state(&self) -> (Iter<'_, (i32, i32)>, (i32, i32)) {
+        (self.visited.iter(), self.cur_loc)
     }
 }
 
@@ -48,9 +52,7 @@ impl Iterator for Part1Solver {
 
 pub fn run(bone: (i32, i32)) -> usize {
     let mut solver = Part1Solver::new(bone);
-    for () in solver.by_ref() {
-        // do nothing
-    }
+    solver.by_ref().count();
     solver.steps
 }
 
