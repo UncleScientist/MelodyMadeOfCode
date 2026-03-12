@@ -4,7 +4,7 @@ use std::collections::{HashSet, hash_set::Iter};
 pub struct Part1Solver {
     visited: HashSet<(i32, i32)>,
     cur_loc: (i32, i32),
-    steps: usize,
+    pub steps: usize,
     cur_dir: usize,
     bone: (i32, i32),
 }
