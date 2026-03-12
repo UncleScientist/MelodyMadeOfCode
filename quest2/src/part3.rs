@@ -3,8 +3,8 @@ use std::{collections::HashSet, fmt::Display};
 pub fn run(bones: Vec<(i32, i32)>) -> usize {
     let mut solver = Solver::new(bones);
 
-    while !solver.finished() && solver.steps < 16000 {
-        solver.step();
+    while solver.next().is_some() && solver.steps < 16000 {
+        // do nothing
     }
 
     solver.steps
@@ -18,6 +18,19 @@ struct Solver {
     remaining: HashSet<(i32, i32)>,
     curdir: usize,
     bounding_box: (i32, i32, i32, i32), // top, bottom, left, right
+}
+
+impl Iterator for Solver {
+    type Item = ();
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.finished() {
+            None
+        } else {
+            self.step();
+            Some(())
+        }
+    }
 }
 
 impl Solver {
