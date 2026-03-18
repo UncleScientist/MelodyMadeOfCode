@@ -59,6 +59,36 @@ impl Node {
         false
     }
 
+    pub fn rebonding_insert(&mut self, mut next: Node) -> Option<Node> {
+        if let Some(ref mut left) = self.left {
+            if left.plug.is_weak(&self.left_socket) && next.plug == self.left_socket {
+                let old = left.clone();
+                **left = next;
+                next = *old;
+            } else {
+                next = left.rebonding_insert(next)?;
+            }
+        } else if next.plug.matches(&self.left_socket) {
+            self.left = Some(Box::new(next));
+            return None;
+        }
+
+        if let Some(ref mut right) = self.right {
+            if right.plug.is_weak(&self.right_socket) && next.plug == self.right_socket {
+                let old = right.clone();
+                **right = next;
+                next = *old;
+            } else {
+                next = right.rebonding_insert(next)?;
+            }
+        } else if next.plug.matches(&self.right_socket) {
+            self.right = Some(Box::new(next));
+            return None;
+        }
+
+        Some(next)
+    }
+
     pub fn order(&self, ids: &mut Vec<usize>) {
         if let Some(left) = &self.left {
             left.order(ids);

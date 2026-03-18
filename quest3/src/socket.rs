@@ -22,6 +22,11 @@ impl Socket {
     pub fn matches(&self, other: &Self) -> bool {
         self.color == other.color || self.shape == other.shape
     }
+
+    pub fn is_weak(&self, other: &Socket) -> bool {
+        assert!(self.matches(other));
+        self.color != other.color || self.shape != other.shape
+    }
 }
 
 impl Display for Socket {
